@@ -1,0 +1,66 @@
+version: 2
+
+references:
+  auth: &auth
+    username: _json_key
+    password: $GCP_AUTH
+  build: &build
+    environment:
+      TEST_RESULTS: /tmp/test-results
+    steps:
+      - checkout
+      - run:
+          name: Show version
+          command: |
+            go version
+            goapp version
+      - run:
+          name: Install dependencies
+          command: |
+            go get -d -t -v ./...
+      - run:
+          name: Check formats
+          command: |
+            errcheck ./... 2>&1 | perl -0pe 's/^/errcheck: /mg and print && exit 1'
+            go vet ./... 2>&1   | perl -0pe 's/^/go vet: /mg and print && exit 1'
+            gofmt -s -l . 2>&1  | perl -0pe 's/^/gofmt: /mg and print && exit 1'
+            goimports -l . 2>&1 | perl -0pe 's/^/goimports: /mg and print && exit 1'
+            golint ./... 2>&1   | perl -0pe 's/^/golint: /mg and print && exit 1'
+      - run: 
+          name: Run tests
+          command: |
+            mkdir $TEST_RESULTS
+            set -o pipefail && go test ./... -v | tee -a $TEST_RESULTS/test.out
+      - run: 
+          name: Save test results
+          command: cat $TEST_RESULTS/test.out | go-junit-report > $TEST_RESULTS/junit.xml
+          when: always
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+
+jobs:
+  build19:
+    <<: *build
+    docker:
+      - image: $GO19_IMAGE
+        auth: *auth
+  build18:
+    <<: *build
+    docker:
+      - image: $GO18_IMAGE
+        auth: *auth
+  build16:
+    <<: *build
+    docker:
+      - image: $GO16_IMAGE
+        auth: *auth
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build19
+      - build18
+      - build16
