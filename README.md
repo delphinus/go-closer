@@ -93,6 +93,40 @@ func fuga() (_ []int, err error) {
 
 このように、複数の返値を持つ場合でも問題ありません。名前を付ける必要の無い返値は `_` で置き換えるだけです。
 
+### `io.Closer` 以外はどうする？
+
+一時ファイルを開いた場合など、関数を抜ける前にお掃除したいときがありますよね？
+
+```go
+func hogefuga() error {
+  f, err := ioutil.TempFile("", "hogefuga")
+  if err != nil {
+    return err
+  }
+  defer os.Remove(f.Name()) // エラーが無視されている！
+
+  ...
+
+  return nil
+}
+```
+
+`os.Remove()` は `io.Closer` ではないので `closer.Close()` は使えません。このような場合は汎用的な関数 `closer.Check()` が使えます。
+
+```go
+func fugahoge() (err error) {
+  f, err := ioutil.TempFile("", "fugahoge")
+  if err != nil {
+    return err
+  }
+  defer closer.Check(func() error { return os.Remove(f.Name()) }, &err)
+
+  ...
+
+  return nil
+}
+```
+
 ## 元ネタ
 
 * [Don’t defer Close() on writable files – joe shaw](https://joeshaw.org/dont-defer-close-on-writable-files/)
