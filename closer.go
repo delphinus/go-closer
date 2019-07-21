@@ -9,7 +9,7 @@ func Close(r io.Closer, err *error) {
 }
 
 // Check is for using on defer's.  It checks the func error and set it on a
-// supplied variables.
+// supplied variable.
 func Check(f func() error, err *error) {
 	if ferr := f(); ferr != nil && *err == nil {
 		*err = ferr

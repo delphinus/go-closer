@@ -75,7 +75,7 @@ func hoge() (err error) {
 
 That's it! This code manages the exit processing and can report the error when it occurs.
 
-The signature is the point: `(err error)`. The `defer` block can overwrite the value `err` -- the named return value. You may not have used named return values. You need (almose) not to change how to write functions.
+The point is the signature: `(err error)`. The `defer` block can overwrite the value `err` -- the named return value. You may not have used named return values. You need (almost) not to change how to write functions.
 
 ```go
 func fuga() (_ []int, err error) {
@@ -111,7 +111,7 @@ func hogefuga() error {
 }
 ```
 
-You cannot use `close.Close()` because `os.Remove()` is not `io.Closer`. You can check more general function: `closer.Check()`.
+You cannot use `close.Close()` because `os.Remove()` is not `io.Closer`. You can use more general function: `closer.Check()`.
 
 ```go
 func fugahoge() (err error) {
